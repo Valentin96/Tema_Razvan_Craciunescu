@@ -3,7 +3,7 @@ D=8;
 w0=2*pi/P; 
 t_tr=0:0.02:D*2;
 x_tr= sawtooth((pi/8)*t_tr,0.5)/2+0.5; 
-t = 0:0.02:160;
+t = 0:0.02:40;
 x = zeros(1,length(t)); 
 x(t<=D*2)=x_tr; 
 figure(1);
