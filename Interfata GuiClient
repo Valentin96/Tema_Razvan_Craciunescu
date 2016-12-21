@@ -1,0 +1,152 @@
+/*
+ * Toa change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package seriaf.poo.client.gui;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Scanner;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JScrollPane;
+import seriaf.poo.client.ClientPeer;
+
+
+/**
+ *
+ * @author Vali
+ */
+public class GuiClient extends JFrame{
+    
+    private Socket socket;
+    private String userName;
+    private ClientPeer clientPeer;
+    
+    private JButton sendButton;
+    private JButton nameButton;
+    
+    private JTextArea msgsArea;
+    private JTextField msgField;
+    private JTextField nameField;
+    private JLabel label;
+    
+    private JPanel msgsPanel;
+    private JPanel namePanel;
+    
+    public GuiClient(Socket s, String name) {
+        super("Chat Client");
+        socket = s;
+        userName = name;
+        
+        try {
+            clientPeer = new ClientPeer(name, s);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+     
+        msgsArea = new JTextArea();
+        msgsArea.setEditable(false);
+        msgsArea.setSize(700, 700);
+        JScrollPane scroll = new JScrollPane(msgsArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+              JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        
+        clientPeer.setOutputPane(msgsArea);
+        
+        initMsgsPanel();
+        initNamePanel();
+        
+        this.add(scroll);
+        this.getContentPane().add(namePanel, BorderLayout.NORTH);
+        this.getContentPane().add(msgsPanel, BorderLayout.SOUTH);
+        this.setSize(800,800);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);     
+        this.setResizable(false);
+    }
+    
+    public void display() {
+        clientPeer.start();
+        this.setVisible(true);
+    }
+    
+    private void initNamePanel() {
+        nameField = new JTextField(50);
+        
+        label = new JLabel("Name:");
+        
+        nameButton = new JButton("Change Name");
+        nameButton.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == nameButton && !nameField.getText().equals("")) {
+                    String newName = nameField.getText();
+                    //nameField.setText("");
+                    userName = newName;
+                    clientPeer.setUsername(newName);
+                }
+            }
+        });
+        
+        namePanel = new JPanel();
+        namePanel.add(label);
+        namePanel.add(nameField);
+        namePanel.add(nameButton);
+    }
+    
+    private void initMsgsPanel() {
+        msgField = new JTextField(50);
+        
+        sendButton = new JButton("Send");
+        sendButton.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == sendButton && !msgField.getText().equals("")) {
+                    String msg = msgField.getText();
+                    msgField.setText("");
+                    try {
+                        clientPeer.sendMessage(msg);
+                    } catch(IOException exp) {
+                        exp.printStackTrace();
+                    }
+                }
+            }
+        });
+        
+        msgsPanel = new JPanel();
+        msgsPanel.add(msgField);
+        msgsPanel.add(sendButton);
+        
+    }
+    
+    public static void main(String[] args) {
+        if (args.length != 3) {
+            System.err.println("Can't run the program");
+            return;
+        } else {
+            String name = args[0];
+            String host = args[1];
+            int port = Integer.parseInt(args[2]);
+            Socket s = null;
+            try {
+                s = new Socket(host, port);
+            } catch (IOException e) {
+                System.err.println("Can't connect to the given host name "
+                        + "and port number");
+                return;
+            }
+            GuiClient gc = new GuiClient(s, name);                        
+            gc.display();
+        }
+    }
+    
+}
